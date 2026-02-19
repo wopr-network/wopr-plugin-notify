@@ -1,7 +1,7 @@
 {
   "name": "@wopr-network/wopr-plugin-notify",
   "version": "1.0.0",
-  "description": "Notification plugin for WOPR — sends notifications to configured channels",
+  "description": "Notification plugin for WOPR \u2014 sends notifications to configured channels",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "type": "module",
@@ -30,7 +30,9 @@
     "@biomejs/biome": "^2.3.15",
     "@types/node": "^25.2.3",
     "typescript": "^5.3.0",
-    "vitest": "^4.0.18"
+    "vitest": "^4.0.18",
+    "semantic-release": "^24.0.0",
+    "@wopr-network/semantic-release-config": "^1.0.0"
   },
   "publishConfig": {
     "access": "public"
