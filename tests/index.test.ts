@@ -7,6 +7,8 @@ const mockCtx = {
     warn: vi.fn(),
   },
   registerA2AServer: vi.fn(),
+  registerConfigSchema: vi.fn(),
+  unregisterConfigSchema: vi.fn(),
   events: {
     emitCustom: vi.fn().mockResolvedValue(undefined),
   },
@@ -28,6 +30,7 @@ describe("wopr-plugin-notify", () => {
     it("should register A2A server on init", async () => {
       const { default: plugin } = await import("../src/index.js");
       await plugin.init(mockCtx as any);
+      await plugin.shutdown();
       expect(mockCtx.registerA2AServer).toHaveBeenCalledTimes(1);
       const serverConfig = mockCtx.registerA2AServer.mock.calls[0][0];
       expect(serverConfig.name).toBe("notify");
@@ -38,12 +41,14 @@ describe("wopr-plugin-notify", () => {
       const ctxNoA2A = { ...mockCtx, registerA2AServer: undefined };
       const { default: plugin } = await import("../src/index.js");
       await plugin.init(ctxNoA2A as any);
+      await plugin.shutdown();
       // Should not throw
     });
 
     it("should log info on init", async () => {
       const { default: plugin } = await import("../src/index.js");
       await plugin.init(mockCtx as any);
+      await plugin.shutdown();
       expect(mockCtx.log.info).toHaveBeenCalledWith("Notify plugin initialized");
     });
 
@@ -53,12 +58,75 @@ describe("wopr-plugin-notify", () => {
     });
   });
 
+  describe("manifest", () => {
+    it("should have a complete manifest", async () => {
+      const { default: plugin } = await import("../src/index.js");
+      expect(plugin.manifest).toBeDefined();
+      expect(plugin.manifest!.name).toBe("@wopr-network/wopr-plugin-notify");
+      expect(plugin.manifest!.version).toBe("1.0.0");
+      expect(plugin.manifest!.description).toBeTruthy();
+      expect(plugin.manifest!.capabilities).toEqual(["notifications"]);
+      expect(plugin.manifest!.category).toBe("utility");
+      expect(plugin.manifest!.tags).toEqual(["notifications", "alerts", "events"]);
+      expect(plugin.manifest!.icon).toBe(":bell:");
+      expect(plugin.manifest!.lifecycle).toEqual({ shutdownBehavior: "graceful" });
+    });
+  });
+
+  describe("config schema", () => {
+    it("should register config schema on init", async () => {
+      const { default: plugin } = await import("../src/index.js");
+      const localCtx = {
+        ...mockCtx,
+        registerConfigSchema: vi.fn(),
+        unregisterConfigSchema: vi.fn(),
+      };
+      await plugin.init(localCtx as any);
+      expect(localCtx.registerConfigSchema).toHaveBeenCalledWith(
+        "wopr-plugin-notify",
+        expect.objectContaining({ title: expect.any(String), fields: expect.any(Array) }),
+      );
+      await plugin.shutdown();
+    });
+
+    it("should unregister config schema on shutdown", async () => {
+      const { default: plugin } = await import("../src/index.js");
+      const localCtx = {
+        ...mockCtx,
+        registerConfigSchema: vi.fn(),
+        unregisterConfigSchema: vi.fn(),
+      };
+      await plugin.init(localCtx as any);
+      await plugin.shutdown();
+      expect(localCtx.unregisterConfigSchema).toHaveBeenCalledWith("wopr-plugin-notify");
+    });
+  });
+
+  describe("shutdown idempotency", () => {
+    it("should be safe to call shutdown multiple times", async () => {
+      const { default: plugin } = await import("../src/index.js");
+      const localCtx = {
+        ...mockCtx,
+        registerConfigSchema: vi.fn(),
+        unregisterConfigSchema: vi.fn(),
+      };
+      await plugin.init(localCtx as any);
+      await plugin.shutdown();
+      await plugin.shutdown(); // second call should not throw
+    });
+
+    it("should be safe to call shutdown without init", async () => {
+      const { default: plugin } = await import("../src/index.js");
+      await expect(plugin.shutdown()).resolves.toBeUndefined();
+    });
+  });
+
   describe("notify A2A tools", () => {
-    it("should register one tool: notify", async () => {
+    it("should register one tool: notify.send", async () => {
       const { buildNotifyA2ATools } = await import("../src/notify-a2a-tools.js");
       const config = buildNotifyA2ATools(mockCtx as any);
       expect(config.tools).toHaveLength(1);
-      expect(config.tools[0].name).toBe("notify");
+      expect(config.tools[0].name).toBe("notify.send");
     });
 
     it("should have valid tool schema", async () => {
