@@ -72,7 +72,7 @@ const plugin: WOPRPlugin = {
     cleanups.length = 0;
 
     if (ctx) {
-      ctx.unregisterConfigSchema("wopr-plugin-notify");
+      if (ctx.unregisterConfigSchema) ctx.unregisterConfigSchema("wopr-plugin-notify");
     }
 
     ctx = null;
