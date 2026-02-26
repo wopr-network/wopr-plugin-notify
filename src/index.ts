@@ -14,6 +14,7 @@ const configSchema: ConfigSchema = {
       label: "Default Channel",
       placeholder: "e.g. alerts",
       description: "Default notification channel when none specified",
+      setupFlow: "none",
     },
     {
       name: "defaultLevel",
@@ -21,6 +22,7 @@ const configSchema: ConfigSchema = {
       label: "Default Level",
       description: "Default notification severity level",
       default: "info",
+      setupFlow: "none",
       options: [
         { value: "info", label: "Info" },
         { value: "warn", label: "Warning" },
@@ -35,6 +37,7 @@ const manifest: PluginManifest = {
   version: "1.0.0",
   description: "Notification plugin — sends notifications to configured channels via A2A tool",
   capabilities: ["notifications"],
+  requires: {},
   category: "utility",
   tags: ["notifications", "alerts", "events"],
   icon: ":bell:",
@@ -53,7 +56,7 @@ const plugin: WOPRPlugin = {
   async init(context: WOPRPluginContext) {
     ctx = context;
 
-    ctx.registerConfigSchema("wopr-plugin-notify", configSchema);
+    if (ctx.registerConfigSchema) ctx.registerConfigSchema("wopr-plugin-notify", configSchema);
 
     if (ctx.registerA2AServer) {
       ctx.registerA2AServer(buildNotifyA2ATools(ctx));
