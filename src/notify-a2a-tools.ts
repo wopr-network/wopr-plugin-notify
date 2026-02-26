@@ -6,7 +6,7 @@ export function buildNotifyA2ATools(ctx: WOPRPluginContext): A2AServerConfig {
     version: "1.0.0",
     tools: [
       {
-        name: "notify",
+        name: "notify.send",
         description: "Send a notification to configured channels.",
         inputSchema: {
           type: "object",
